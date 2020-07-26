@@ -419,6 +419,18 @@ func TestUtf32ParserBeParse(t *testing.T) {
 				},
 			},
 		},
+		// 面11以降が不正と判定されることを確認する
+		TestData{
+			input: []byte{
+				0x00, 0x11, 0x00, 0x00,
+			},
+			expected: []ParseResult{
+				ParseResult{
+					token: NewToken(0, TypeInvalidByteSequence, []byte{0x00, 0x11, 0x00, 0x00}),
+					err:   nil,
+				},
+			},
+		},
 	}
 
 	for i, c := range utf32BeCases {
@@ -484,6 +496,18 @@ func TestUtf32ParserLeParse(t *testing.T) {
 				ParseResult{
 					token: NewToken(0, TypeInvalidByteSequence, []byte{0x00, 0x61}),
 					err:   io.ErrUnexpectedEOF,
+				},
+			},
+		},
+		// 面11以降が不正と判定されることを確認する
+		TestData{
+			input: []byte{
+				0x00, 0x00, 0x11, 0x00,
+			},
+			expected: []ParseResult{
+				ParseResult{
+					token: NewToken(0, TypeInvalidByteSequence, []byte{0x00, 0x00, 0x11, 0x00}),
+					err:   nil,
 				},
 			},
 		},

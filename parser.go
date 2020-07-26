@@ -277,5 +277,9 @@ func (p *utf32Parser) parse() (*Token, error) {
 	}
 	r := rune(p.ByteOrder.Uint32(bytes))
 
+	if r > 0x10ffff {
+		return NewToken(0, TypeInvalidByteSequence, bytes), nil
+	}
+
 	return NewToken(r, TypeOk, bytes), nil
 }
