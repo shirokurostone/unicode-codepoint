@@ -1,4 +1,4 @@
-module github.com/shirokurostone/unicode-codepoint
+module github.com/shirokurostone/unicode-codepoint-dump
 
 go 1.14
 
