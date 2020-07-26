@@ -22,6 +22,7 @@ type TestData struct {
 func TestUtf8ParserParse(t *testing.T) {
 
 	utf8Cases := []TestData{
+		// 1-4バイトの文字がパースできることを確認する
 		TestData{
 			input: []byte{
 				0x61,       // a
@@ -51,7 +52,7 @@ func TestUtf8ParserParse(t *testing.T) {
 				},
 			},
 		},
-
+		// 2-4バイト文字が途中で終端しているとき TypeInvalidByteSequence を返すことを確認する
 		TestData{
 			input: []byte{
 				0xc0,
@@ -74,6 +75,7 @@ func TestUtf8ParserParse(t *testing.T) {
 			},
 		},
 
+		// 冗長なエンコーディングのとき TypeRedundantEncoding を返すことを確認する
 		TestData{
 			input: []byte{
 				0xc1, 0xa1,
@@ -99,7 +101,7 @@ func TestUtf8ParserParse(t *testing.T) {
 				},
 			},
 		},
-
+		// UTF-8に表れない不正なバイトの場合 TypeInvalidByteSequence を返すことを確認する
 		TestData{
 			input: []byte{
 				0xff,
@@ -140,6 +142,7 @@ func TestUtf8ParserParse(t *testing.T) {
 func TestUtf16ParserBeParse(t *testing.T) {
 
 	utf16BeCases := []TestData{
+		// UTF-8のケースと同じ文字がパースできることを確認する
 		TestData{
 			input: []byte{
 				0x00, 0x61, // a
@@ -170,7 +173,7 @@ func TestUtf16ParserBeParse(t *testing.T) {
 				},
 			},
 		},
-
+		// 端数のバイトが存在するとき TypeInvalidByteSequence を返すことを確認する
 		TestData{
 			input: []byte{
 				0x61,
@@ -182,7 +185,7 @@ func TestUtf16ParserBeParse(t *testing.T) {
 				},
 			},
 		},
-
+		// 上位サロゲートの後続に下位サロゲートが存在しないとき TypeIncompleteSurrogatePair を返すことを確認する
 		TestData{
 			input: []byte{
 				0xd8, 0x00,
@@ -194,7 +197,7 @@ func TestUtf16ParserBeParse(t *testing.T) {
 				},
 			},
 		},
-
+		// 上位サロゲートの後続に下位サロゲート以外の文字が存在するとき TypeIncompleteSurrogatePair を返すことを確認する
 		TestData{
 			input: []byte{
 				0xd8, 0x00,
@@ -215,7 +218,7 @@ func TestUtf16ParserBeParse(t *testing.T) {
 				},
 			},
 		},
-
+		// 上位サロゲートの後続以外に下位サロゲートが存在したとき TypeIncompleteSurrogatePair を返すことを確認する
 		TestData{
 			input: []byte{
 				0xdc, 0x00,
@@ -256,6 +259,7 @@ func TestUtf16ParserBeParse(t *testing.T) {
 func TestUtf16ParserLeParse(t *testing.T) {
 
 	utf16LeCases := []TestData{
+		// UTF-8のケースと同じ文字がパースできることを確認する
 		TestData{
 			input: []byte{
 				0x61, 0x00, // a
@@ -286,7 +290,7 @@ func TestUtf16ParserLeParse(t *testing.T) {
 				},
 			},
 		},
-
+		// 端数のバイトが存在するとき TypeInvalidByteSequence を返すことを確認する
 		TestData{
 			input: []byte{
 				0x61,
@@ -298,7 +302,7 @@ func TestUtf16ParserLeParse(t *testing.T) {
 				},
 			},
 		},
-
+		// 上位サロゲートの後続に下位サロゲートが存在しないとき TypeIncompleteSurrogatePair を返すことを確認する
 		TestData{
 			input: []byte{
 				0x00, 0xd8,
@@ -310,7 +314,7 @@ func TestUtf16ParserLeParse(t *testing.T) {
 				},
 			},
 		},
-
+		// 上位サロゲートの後続に下位サロゲート以外の文字が存在するとき TypeIncompleteSurrogatePair を返すことを確認する
 		TestData{
 			input: []byte{
 				0x00, 0xd8,
@@ -331,7 +335,7 @@ func TestUtf16ParserLeParse(t *testing.T) {
 				},
 			},
 		},
-
+		// 上位サロゲートの後続以外に下位サロゲートが存在したとき TypeIncompleteSurrogatePair を返すことを確認する
 		TestData{
 			input: []byte{
 				0x00, 0xdc,
@@ -372,6 +376,7 @@ func TestUtf16ParserLeParse(t *testing.T) {
 func TestUtf32ParserBeParse(t *testing.T) {
 
 	utf32BeCases := []TestData{
+		// UTF-8のケースと同じ文字がパースできることを確認する
 		TestData{
 			input: []byte{
 				0x00, 0x00, 0x00, 0x61, // a
@@ -402,7 +407,7 @@ func TestUtf32ParserBeParse(t *testing.T) {
 				},
 			},
 		},
-
+		// 端数のバイトが存在するとき TypeInvalidByteSequence を返すことを確認する
 		TestData{
 			input: []byte{
 				0x00, 0x61,
@@ -439,6 +444,7 @@ func TestUtf32ParserBeParse(t *testing.T) {
 func TestUtf32ParserLeParse(t *testing.T) {
 
 	utf32LeCases := []TestData{
+		// UTF-8のケースと同じ文字がパースできることを確認する
 		TestData{
 			input: []byte{
 				0x61, 0x00, 0x00, 0x00, // a
@@ -469,7 +475,7 @@ func TestUtf32ParserLeParse(t *testing.T) {
 				},
 			},
 		},
-
+		// 端数のバイトが存在するとき TypeInvalidByteSequence を返すことを確認する
 		TestData{
 			input: []byte{
 				0x00, 0x61,
