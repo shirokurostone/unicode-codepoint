@@ -30,8 +30,7 @@ func main() {
 	} else if charset == "UTF-32LE" {
 		parser = NewParser(reader, 32, binary.LittleEndian)
 	} else {
-		flag.PrintDefaults()
-		os.Exit(1)
+		flag.Usage()
 	}
 
 	for {
