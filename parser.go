@@ -123,86 +123,52 @@ type utf8Parser struct {
 }
 
 func (p *utf8Parser) parse() (*Token, error) {
-	var b1, b2, b3, b4 uint8
-	var err error
 
-	b1, err = p.readByte()
+	b1, err := p.readByte()
 	if err != nil {
 		return nil, err
 	}
 
+	bs := []byte{b1}
+	var t *Token
+
 	if b1 <= 0x7f {
-		return NewToken(rune(b1), TypeOk, []byte{b1}), nil
+		return NewToken(rune(b1), TypeOk, bs), nil
 	} else if b1 <= 0xbf {
-		return NewToken(0, TypeInvalidByteSequence, []byte{b1}), err
+		return NewToken(0, TypeInvalidByteSequence, bs), err
 	} else if b1 <= 0xdf {
-
-		if b2, err = p.peekByte(); err != nil {
-			return NewToken(0, TypeInvalidByteSequence, []byte{b1}), err
+		if bs, t, err = p.readNextChar(bs); t != nil || err != nil {
+			return t, err
 		}
-		if b2&0xc0 != 0x80 {
-			return NewToken(0, TypeInvalidByteSequence, []byte{b1}), err
-		}
-		p.readByte()
 
-		r := rune(b1&0x1f)<<6 | rune(b2)&0x3f
-		token := NewToken(r, TypeOk, []byte{b1, b2})
+		r := rune(bs[0]&0x1f)<<6 | rune(bs[1])&0x3f
+		token := NewToken(r, TypeOk, bs)
 		if r < 0x80 {
 			token.Type = TypeRedundantEncoding
 		}
 		return token, nil
 	} else if b1 <= 0xef {
+		for i := 0; i < 2; i++ {
+			if bs, t, err = p.readNextChar(bs); t != nil || err != nil {
+				return t, err
+			}
+		}
 
-		if b2, err = p.peekByte(); err != nil {
-			return NewToken(0, TypeInvalidByteSequence, []byte{b1}), err
-		}
-		if b2&0xc0 != 0x80 {
-			return NewToken(0, TypeInvalidByteSequence, []byte{b1}), err
-		}
-		p.readByte()
-
-		if b3, err = p.peekByte(); err != nil {
-			return NewToken(0, TypeInvalidByteSequence, []byte{b1, b2}), err
-		}
-		if b3&0xc0 != 0x80 {
-			return NewToken(0, TypeInvalidByteSequence, []byte{b1, b2}), err
-		}
-		p.readByte()
-
-		r := rune(b1&0x0f)<<12 | (rune(b2)&0x3f)<<6 | (rune(b3) & 0x3f)
-		token := NewToken(r, TypeOk, []byte{b1, b2, b3})
+		r := rune(bs[0]&0x0f)<<12 | (rune(bs[1])&0x3f)<<6 | (rune(bs[2]) & 0x3f)
+		token := NewToken(r, TypeOk, bs)
 		if r < 0x800 {
 			token.Type = TypeRedundantEncoding
 		}
 		return token, nil
 	} else if b1 <= 0xf7 {
+		for i := 0; i < 3; i++ {
+			if bs, t, err = p.readNextChar(bs); t != nil || err != nil {
+				return t, err
+			}
+		}
 
-		if b2, err = p.peekByte(); err != nil {
-			return NewToken(0, TypeInvalidByteSequence, []byte{b1}), err
-		}
-		if b2&0xc0 != 0x80 {
-			return NewToken(0, TypeInvalidByteSequence, []byte{b1}), err
-		}
-		p.readByte()
-
-		if b3, err = p.peekByte(); err != nil {
-			return NewToken(0, TypeInvalidByteSequence, []byte{b1, b2}), err
-		}
-		if b3&0xc0 != 0x80 {
-			return NewToken(0, TypeInvalidByteSequence, []byte{b1, b2}), err
-		}
-		p.readByte()
-
-		if b4, err = p.peekByte(); err != nil {
-			return NewToken(0, TypeInvalidByteSequence, []byte{b1, b2, b3}), err
-		}
-		if b4&0xc0 != 0x80 {
-			return NewToken(0, TypeInvalidByteSequence, []byte{b1, b2, b3}), err
-		}
-		p.readByte()
-
-		r := rune(b1&0x07)<<18 | (rune(b2)&0x3f)<<12 | (rune(b3)&0x3f)<<6 | (rune(b4) & 0x3f)
-		token := NewToken(r, TypeOk, []byte{b1, b2, b3, b4})
+		r := rune(bs[0]&0x07)<<18 | (rune(bs[1])&0x3f)<<12 | (rune(bs[2])&0x3f)<<6 | (rune(bs[3]) & 0x3f)
+		token := NewToken(r, TypeOk, bs)
 		if r < 0x10000 {
 			token.Type = TypeRedundantEncoding
 		}
@@ -211,6 +177,20 @@ func (p *utf8Parser) parse() (*Token, error) {
 		return NewToken(0, TypeInvalidByteSequence, []byte{b1}), err
 	}
 
+}
+
+func (p *utf8Parser) readNextChar(bs []byte) ([]byte, *Token, error) {
+	var b byte
+	var err error
+	if b, err = p.peekByte(); err != nil {
+		return bs, NewToken(0, TypeInvalidByteSequence, bs), err
+	}
+	if b&0xc0 != 0x80 {
+		return bs, NewToken(0, TypeInvalidByteSequence, bs), err
+	}
+	p.readByte()
+
+	return append(bs, b), nil, nil
 }
 
 type utf16Parser struct {
